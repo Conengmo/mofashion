@@ -46,13 +46,11 @@ def download_image_elements(images, run_name):
 def main_hm(gender: str):
     size = 12
     if gender == 'f':
-        available = 4807
         url = ('https://www2.hm.com/nl_nl/dames/shop-by-product/view-all.html?sort=stock'
                '&productTypes=blouse,broek,colbert,gilet,jas,jeans,jumpsuit,jurk,legging,'
                'ochtendjas,overhemd,poncho,rok,short,sweater,t-shirt,top,trui,tuniek,vest'
                '&image-size=small&image={}&offset={}&page-size={}')
     elif gender == 'm':
-        available = 1698
         url = ('https://www2.hm.com/nl_nl/heren/shop-op-item/view-all.html?sort=stock'
                '&productTypes=broek,colbert,gilet,jack,jas,jeans,legging,longjohns,overhemd,'
                'short,sweater,t-shirt,top,trui,vest'
@@ -60,6 +58,9 @@ def main_hm(gender: str):
     else:
         raise ValueError('gender argument may be either \'m\' or \'f\'.')
     with yield_driver() as driver:
+        driver.get(url.format('model', 0, 12))
+        item = driver.find_element_by_class_name('load-more-heading')
+        available = int(item.get_attribute('data-total'))
         for offset in range(0, available, size):
             print(f'Working on {offset} to {offset + size} of {available}.')
             for img_type in ('model', 'stillLife'):
