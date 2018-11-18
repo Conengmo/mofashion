@@ -11,21 +11,24 @@ from selenium import webdriver
 import requests
 
 
+PATH = r'F:\mofashion-data'
+
+
 @contextlib.contextmanager
 def yield_driver():
     driver = None
     try:
         driver = webdriver.Firefox()
         driver.implicitly_wait(3)
-        driver.maximize_window()  # images are larger on some sites
+        driver.maximize_window()  # images are larger this way on some sites
         yield driver
     finally:
         if driver is not None:
             driver.quit()
 
 
-def get_path(run_name):
-    path = os.path.join('images', run_name)
+def get_path(run_name: str):
+    path = os.path.join(PATH, run_name)
     if not os.path.exists(path):
         os.makedirs(path)
     return path
