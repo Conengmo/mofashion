@@ -151,17 +151,17 @@ def main_uniqlo(gender: str):
                 product_ids.append(product_id)
 
 
-def main_zalando():
-    available = 892
-    # done until page 45
-    url = 'https://www.zalando.nl/dameskleding/?p={}'
-    with yield_driver() as driver:
-        for page in range(2, available):
-            print(f'Working on page {page} of {available}.')
-            driver.get(url.format(page))
-            images = driver.find_elements_by_class_name('cat_image-1byrW')
-            print(f'Found {len(images)} images.')
-            download_image_elements(images, 'za-f-a')
+# def main_zalando():
+#     available = 892
+#     # done until page 45
+#     url = 'https://www.zalando.nl/dameskleding/?p={}'
+#     with yield_driver() as driver:
+#         for page in range(2, available):
+#             print(f'Working on page {page} of {available}.')
+#             driver.get(url.format(page))
+#             images = driver.find_elements_by_class_name('cat_image-1byrW')
+#             print(f'Found {len(images)} images.')
+#             download_image_elements(images, 'za-f-a')
 
 
 if __name__ == '__main__':
