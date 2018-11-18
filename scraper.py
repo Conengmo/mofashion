@@ -6,8 +6,7 @@ https://selenium-python.readthedocs.io/api.html#module-selenium.webdriver.remote
 import os
 import uuid
 import contextlib
-import time
-from typing import List
+from typing import List, Optional
 
 from selenium import webdriver
 import requests
@@ -51,13 +50,21 @@ class ImageDownloader:
             src = item.get_property('src')
             self.download_image(src)
 
-    def download_image(self, image_url: str):
+    def download_image(self,
+                       image_url: str,
+                       image_id: Optional[str] = None,
+                       empty_image: Optional[bytes] = None):
         resp = requests.get(image_url)
         resp.raise_for_status()
         file_type, extension = resp.headers['Content-Type'].split('/')
         assert file_type == 'image'
         assert extension in ('jpeg',)
-        filepath = os.path.join(self.path, f'{self.run_name}_{uuid.uuid4()}.{extension}')
+        if empty_image is not None:
+            if empty_image == resp.content:
+                return
+        if image_id is None:
+            image_id = uuid.uuid4()
+        filepath = os.path.join(self.path, f'{self.run_name}_{image_id}.{extension}')
         with open(filepath, 'wb') as f:
             f.write(resp.content)
 
@@ -95,23 +102,48 @@ def main_hm(gender: str):
                                  if item not in images_models and item not in images_items]
                 if images_failed:
                     print(f'{len(images_failed)} failed images')
-
-
-# def main_uniqlo():
-#     url = 'https://www.uniqlo.com/eu/en/women'
-#     images_done = []
-#     with yield_driver() as driver:
-#         driver.get(url)
-#         while True:
-#             images = driver.find_elements_by_class_name('productTile__image')
-#             images = [item for item in images if item.get_property('src') not in images_done]
-#             images_done.extend([item.get_property('src') for item in images])
-#             print(f'Downloading {len(images)} images out of {len(images_done)} done already.')
-#             download_image_elements(images, 'un-f-a')
-#             driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
-#             time.sleep(0.5)
                 downloader_models.download_image_elements(images_models)
                 downloader_items.download_image_elements(images_items)
+
+
+def main_uniqlo():
+    size = 24
+    gender = 'm'
+    url = ('https://www.uniqlo.com/eu/en/men?prefn1=category-id&sz={size}&start={offset}'
+           '&format=page-element&prefv1=IDm-tops|IDm-bottoms|IDm-knitwear|IDm-outerwear')
+    url_image = 'https://uniqlo.scene7.com/is/image/UNIQLO/goods_{product_id}_sub{sub}?$pdp-medium$'
+
+    dl_models_full = ImageDownloader(f'un-{gender}-models-full')
+    dl_models_partial = ImageDownloader(f'un-{gender}-models-partial')
+    dl_items_partial = ImageDownloader(f'un-{gender}-items-partial')
+
+    resp = requests.get('https://uniqlo.scene7.com/is/image/UNIQLO/goods_411924_sub2?$pdp-medium$')
+    resp.raise_for_status()
+    empty_image = resp.content
+
+    product_ids: List[int] = []
+
+    with yield_driver() as driver:
+        for offset in range(0, 10000, size):
+            print(f'Working on {offset} to {offset + size}.')
+            driver.get(url.format(size=size, offset=offset))
+            for item in driver.find_elements_by_class_name('productTile__link'):
+                product_url = item.get_attribute('href')
+                product_id = int(product_url.rstrip('.html').split('-')[-1])
+                if product_id in product_ids:
+                    continue
+                for i in range(1, 4):
+                    dl_models_full.download_image(url_image.format(product_id=product_id, sub=i),
+                                                  image_id=f'{product_id}_{i}',
+                                                  empty_image=empty_image)
+                dl_models_partial.download_image(url_image.format(product_id=product_id, sub=4),
+                                                 image_id=f'{product_id}_{i}',
+                                                 empty_image=empty_image)
+                for i in range(5, 8):
+                    dl_items_partial.download_image(url_image.format(product_id=product_id, sub=i),
+                                                    image_id=f'{product_id}_{i}',
+                                                    empty_image=empty_image)
+                product_ids.append(product_id)
 
 
 def main_zalando():
@@ -128,7 +160,7 @@ def main_zalando():
 
 
 if __name__ == '__main__':
-    main_hm(gender='m')
-    main_hm(gender='f')
-    # main_uniqlo()
+    # main_hm(gender='m')
+    # main_hm(gender='f')
+    main_uniqlo()
     # main_zalando()
