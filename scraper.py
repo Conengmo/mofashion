@@ -106,11 +106,16 @@ def main_hm(gender: str):
                 downloader_items.download_image_elements(images_items)
 
 
-def main_uniqlo():
+def main_uniqlo(gender: str):
     size = 24
-    gender = 'm'
-    url = ('https://www.uniqlo.com/eu/en/men?prefn1=category-id&sz={size}&start={offset}'
-           '&format=page-element&prefv1=IDm-tops|IDm-bottoms|IDm-knitwear|IDm-outerwear')
+    if gender == 'm':
+        url = ('https://www.uniqlo.com/eu/en/men?prefn1=category-id&sz={size}&start={offset}'
+               '&format=page-element&prefv1=IDm-tops|IDm-bottoms|IDm-knitwear|IDm-outerwear')
+    elif gender == 'f':
+        url = ('https://www.uniqlo.com/eu/en/women?prefn1=category-id&sz={size}&start={offset}'
+               '&format=page-element&prefv1=IDw-outerwear|IDw-knitwear|IDw-tops|IDw-bottoms')
+    else:
+        raise ValueError('gender argument may be either \'m\' or \'f\'.')
     url_image = 'https://uniqlo.scene7.com/is/image/UNIQLO/goods_{product_id}_sub{sub}?$pdp-medium$'
 
     dl_models_full = ImageDownloader(f'un-{gender}-models-full')
@@ -162,5 +167,6 @@ def main_zalando():
 if __name__ == '__main__':
     # main_hm(gender='m')
     # main_hm(gender='f')
-    main_uniqlo()
+    main_uniqlo(gender='m')
+    main_uniqlo(gender='f')
     # main_zalando()
