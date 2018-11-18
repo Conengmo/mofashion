@@ -6,6 +6,8 @@ https://selenium-python.readthedocs.io/api.html#module-selenium.webdriver.remote
 import os
 import uuid
 import contextlib
+import time
+from typing import List
 
 from selenium import webdriver
 import requests
@@ -27,27 +29,36 @@ def yield_driver():
             driver.quit()
 
 
-def get_path(run_name: str):
-    path = os.path.join(PATH, run_name)
-    if not os.path.exists(path):
-        os.makedirs(path)
-    return path
+class ImageDownloader:
 
+    def __init__(self, run_name):
+        self.run_name = run_name
+        self.path = self.get_path(run_name)
 
-def download_image_elements(images, run_name):
-    path = get_path(run_name)
-    for item in images:
-        height = item.size['height']
-        width = item.size['width']
-        if height < 100 or width < 100:
-            continue
-        src = item.get_property('src')
-        resp = requests.get(src)
+    @staticmethod
+    def get_path(run_name: str):
+        path = os.path.join(PATH, run_name)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    def download_image_elements(self, images: list):
+        for item in images:
+            height = item.size['height']
+            width = item.size['width']
+            if height < 100 or width < 100:
+                continue
+            src = item.get_property('src')
+            self.download_image(src)
+
+    def download_image(self, image_url: str):
+        resp = requests.get(image_url)
         resp.raise_for_status()
         file_type, extension = resp.headers['Content-Type'].split('/')
         assert file_type == 'image'
-        assert extension in ('jpeg', )
-        with open(os.path.join(path, f'{run_name}_{uuid.uuid4()}.{extension}'), 'wb') as f:
+        assert extension in ('jpeg',)
+        filepath = os.path.join(self.path, f'{self.run_name}_{uuid.uuid4()}.{extension}')
+        with open(filepath, 'wb') as f:
             f.write(resp.content)
 
 
@@ -65,6 +76,8 @@ def main_hm(gender: str):
                '&image-size=small&image={}&offset={}&page-size={}')
     else:
         raise ValueError('gender argument may be either \'m\' or \'f\'.')
+    downloader_models = ImageDownloader(f'hm-{gender}-models')
+    downloader_items = ImageDownloader(f'hm-{gender}-items')
     with yield_driver() as driver:
         driver.get(url.format('model', 0, 12))
         item = driver.find_element_by_class_name('load-more-heading')
@@ -82,18 +95,6 @@ def main_hm(gender: str):
                                  if item not in images_models and item not in images_items]
                 if images_failed:
                     print(f'{len(images_failed)} failed images')
-                download_image_elements(images_models, f'hm-{gender}-models')
-                download_image_elements(images_items, f'hm-{gender}-items')
-
-    # with yield_driver() as driver:
-    #     for offset in range(0, available, size):
-    #         print(f'Working on {offset} to {offset + size} of {available}.')
-    #         driver.get(url.format('model', offset, size))
-    #         images = driver.find_elements_by_class_name('item-image')
-    #         download_image_elements(images, 'hm-f-m')
-    #         driver.get(url.format('stillLife', offset, size))
-    #         images = driver.find_elements_by_class_name('item-image')
-    #         download_image_elements(images, 'hm-f-i')
 
 
 # def main_uniqlo():
@@ -109,6 +110,8 @@ def main_hm(gender: str):
 #             download_image_elements(images, 'un-f-a')
 #             driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
 #             time.sleep(0.5)
+                downloader_models.download_image_elements(images_models)
+                downloader_items.download_image_elements(images_items)
 
 
 def main_zalando():
