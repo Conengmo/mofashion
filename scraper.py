@@ -1,4 +1,6 @@
-"""
+"""Script to scrape images from HM, Uniqlo and Mango websites.
+
+Uses Selenium with Firefox webdriver.
 
 https://selenium-python.readthedocs.io/api.html#module-selenium.webdriver.remote.webelement
 """
@@ -227,24 +229,11 @@ def main_mango(gender: str):
                     break
 
 
-# def main_zalando():
-#     available = 892
-#     # done until page 45
-#     url = 'https://www.zalando.nl/dameskleding/?p={}'
-#     with yield_driver() as driver:
-#         for page in range(2, available):
-#             print(f'Working on page {page} of {available}.')
-#             driver.get(url.format(page))
-#             images = driver.find_elements_by_class_name('cat_image-1byrW')
-#             print(f'Found {len(images)} images.')
-#             download_image_elements(images, 'za-f-a')
-
-
 if __name__ == '__main__':
     # main_hm(gender='m')
-    # main_hm(gender='f')
+    # main_hm(gender='f')  # Ran HM female until 1680
     # main_uniqlo(gender='m')
     # main_uniqlo(gender='f')
     # main_mango(gender='m')
-    main_mango(gender='f')
-    # main_zalando()
+    # main_mango(gender='f')
+    print('Finished')
