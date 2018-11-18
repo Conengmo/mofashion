@@ -161,18 +161,17 @@ def main_uniqlo(gender: str):
 
 
 def main_mango(gender: str):
+    # This function is slow... it's needlessly iteration.
     if gender == 'm':
         base_url = 'https://shop.mango.com/nl/heren/'
         url_suffixs = ['t-shirts_c12018147', 'jassen_c32859776', 'jasjes_c16042202',
                        'blazers_c14858698', 'truien-en-vesten_c12660076', 'sweaters_c71156082',
                        'overhemden_c10863844', 'broeken_c11949748', 'jeans_c23998484']
     elif gender == 'f':
-        # I'm skipping the large sizes section called violeta
         base_url = 'https://shop.mango.com/nl/dames/'
         url_suffixs = ['vesten-en-truien_c18200786', 'jassen_c67886633', 'jasjes_c69427016',
-                       'jurken_c55363448', 'jumpsuits_c99834840',
-                       'blouses_c78920337', 't-shirts-en-tops_c66796663',
-                       'broeken_c52748027', 'jeans_c99220156',
+                       'jurken_c55363448', 'jumpsuits_c99834840', 'blouses_c78920337',
+                       't-shirts-en-tops_c66796663',  'broeken_c52748027', 'jeans_c99220156',
                        'rokken_c20673898']
     else:
         raise ValueError('gender argument may be either \'m\' or \'f\'.')
@@ -183,10 +182,9 @@ def main_mango(gender: str):
     dl_models_partial = ImageDownloader(f'ma-{gender}-models-partial')
     dl_items_full = ImageDownloader(f'ma-{gender}-items-full')
 
-    full_urls = set()
-
     with yield_driver() as driver:
         for url_suffix in url_suffixs:
+            full_urls = set()
             driver.get(base_url + url_suffix)
             time.sleep(2)
             driver.find_element_by_id('navColumns4').click()
@@ -247,6 +245,6 @@ if __name__ == '__main__':
     # main_hm(gender='f')
     # main_uniqlo(gender='m')
     # main_uniqlo(gender='f')
-    main_mango(gender='m')
+    # main_mango(gender='m')
     main_mango(gender='f')
     # main_zalando()
